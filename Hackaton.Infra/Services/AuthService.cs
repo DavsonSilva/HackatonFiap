@@ -38,7 +38,7 @@ namespace Hackaton.Infra.Services
             {
                 Token = token,
                 Nome = usuario.Nome,
-                Role = usuario is Medico ? "Médico" : "Paciente"
+                Role = usuario is Medico ? "Medico" : "Paciente"
             };
         }
 
@@ -47,11 +47,13 @@ namespace Hackaton.Infra.Services
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
-                new Claim("role", usuario is Medico ? "Médico" : "Paciente")
+
+                // 🔹 ESSENCIAL: Use apenas "role" para evitar conflitos com o ASP.NET
+                new Claim("role", usuario is Medico ? "Medico" : "Paciente")
             };
 
             var token = new JwtSecurityToken(

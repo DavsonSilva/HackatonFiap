@@ -1,4 +1,4 @@
-using Hackaton.Domain.Mappings;
+Ôªøusing Hackaton.Domain.Mappings;
 using Hackaton.Domain.Settings;
 using Hackaton.Infra.Data.Context;
 using Hackaton.Infra.Ioc;
@@ -6,27 +6,45 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
-var postGreeDbSettings = builder.Configuration.GetSection("PostGreeDbSettings").Get<PostgreDbSettings>();
+var postGreeDbSettings = builder.Configuration
+    .GetSection("PostGreeDbSettings")
+    .Get<PostgreDbSettings>();
 
 builder.Services.AddDbContext<FiapDbContext>(options =>
     options.UseNpgsql(postGreeDbSettings.ConnectionString));
 
 builder.Services.AddSingleton<NpgsqlConnection>(sp => new NpgsqlConnection(postGreeDbSettings.ConnectionString));
-
 builder.Services.AddScoped<FiapDbContext>();
-
 
 builder.Services.AddControllers();
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+var jwtSettings = builder.Configuration
+    .GetSection("JwtSettings")
+    .Get<JwtSettings>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("User.IsInRole(\"Medico\"): " + context.Principal.IsInRole("Medico"));
+                return Task.CompletedTask;
+            }
+        };
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -35,7 +53,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+
+            RoleClaimType = "role"
         };
     });
 
@@ -44,19 +64,41 @@ builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.ConfigureApplicationContext(builder.Configuration);
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
         Title = "Hackaton Fiap API",
         Version = "v1",
-        Description = "API da aplicaÁ„o Hackaton Fiap"
+        Description = "API da aplica√ß√£o Hackaton Fiap"
+    });
+
+    var jwtSecurityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        BearerFormat = "JWT",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        Description = "Insira 'Bearer' [espa√ßo] e ent√£o seu token JWT",
+        Reference = new Microsoft.OpenApi.Models.OpenApiReference
+        {
+            Id = "Bearer",
+            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme
+        }
+    };
+
+    c.AddSecurityDefinition("Bearer", jwtSecurityScheme);
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        { jwtSecurityScheme, Array.Empty<string>() }
     });
 });
 
 var app = builder.Build();
 
-// Configure o pipeline de requisiÁ„o HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -64,6 +106,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();

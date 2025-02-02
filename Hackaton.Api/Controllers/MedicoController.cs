@@ -19,7 +19,7 @@ namespace Hackaton.Api.Controllers
             _medicoService = medicoService;
         }
 
-        [Authorize(Roles = "Médico")]
+        [Authorize(Roles = "Medico")]
         [HttpGet("dashboard")]
         public IActionResult GetDashboard()
         {
@@ -34,6 +34,7 @@ namespace Hackaton.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<MedicoResponse>> GetById(int id)
         {
             var medico = await _medicoService.GetByIdAsync(id);
