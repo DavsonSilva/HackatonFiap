@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
-using Hackaton.Domain.Entities.AgendaEntity;
 using Hackaton.Domain.Repositories;
-using Hackaton.Domain.Requests.Agenda;
 using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
 

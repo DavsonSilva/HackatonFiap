@@ -51,7 +51,6 @@ namespace Hackaton.Infra.Services
                 new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
 
-                // 🔹 ESSENCIAL: Use apenas "role" para evitar conflitos com o ASP.NET
                 new Claim("role", usuario is Medico ? "Medico" : "Paciente")
             };
 

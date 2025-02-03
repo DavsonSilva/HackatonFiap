@@ -13,7 +13,18 @@ namespace Hackaton.Infra.Data.Repositories
 
         public async Task<IEnumerable<Consulta>> GetAllAsync()
         {
-            return await set.ToListAsync();
+            return await set
+                .Include(c => c.Medico) 
+                .Include(c => c.Paciente)
+                .OrderByDescending(c => c.DataHora)
+                .ToListAsync();
+        }
+
+        public IQueryable<Consulta> GetQueryable()
+        {
+            return set
+                .Include(c => c.Medico)
+                .Include(c => c.Paciente);
         }
 
         public async Task<Consulta> GetByIdAsync(int id)

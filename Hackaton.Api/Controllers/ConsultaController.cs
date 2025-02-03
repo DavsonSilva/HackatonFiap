@@ -1,4 +1,5 @@
-﻿using Hackaton.Domain.Requests.Consulta;
+﻿using Hackaton.Domain.Requests.Base;
+using Hackaton.Domain.Requests.Consulta;
 using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -18,20 +19,16 @@ namespace Hackaton.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ConsultaResponse>>> GetAll()
+        public async Task<ActionResult<ConsultaListaResponse>> GetAll([FromQuery] BaseConsultaPaginada request)
         {
-            var consultas = await _consultaService.GetAllAsync();
+            var consultas = await _consultaService.GetAllAsync(request);
+
+            if (consultas == null || !consultas.Medicos.Any())
+            {
+                return NotFound(new { Message = "Nenhuma consulta encontrada." });
+            }
+
             return Ok(consultas);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ConsultaResponse>> GetById(int id)
-        {
-            var consulta = await _consultaService.GetByIdAsync(id);
-            if (consulta == null)
-                return NotFound();
-
-            return Ok(consulta);
         }
 
         //[Authorize(Roles = "Paciente")]
@@ -39,7 +36,7 @@ namespace Hackaton.Api.Controllers
         public async Task<IActionResult> AgendarConsulta([FromBody] CreateConsultaRequest request)
         {
             var consulta = await _consultaService.AgendarConsultaAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = consulta.Id }, consulta);
+            return Ok(new { Message = "Consulta agendada com sucesso!", Consulta = consulta });
         }
 
         [HttpPost("cancelar")]
