@@ -29,22 +29,5 @@ namespace Hackaton.Infra.Services
             var agenda = await _agendaRepository.GetByIdWithDetailsAsync(id);
             return _mapper.Map<AgendaResponse>(agenda);
         }
-
-        public async Task AddAsync(CreateAgendaRequest request)
-        {
-            var agenda = _mapper.Map<Agenda>(request);
-            await _agendaRepository.InsertAsync(agenda);
-        }
-
-        public async Task UpdateAsync(UpdateAgendaRequest request)
-        {
-            var agenda = _mapper.Map<Agenda>(request);
-            await _agendaRepository.UpdateAsync(agenda);
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            await _agendaRepository.DeleteAsync(id);
-        }
     }
 }

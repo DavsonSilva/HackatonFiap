@@ -7,8 +7,5 @@ namespace Hackaton.Domain.Services
     {
         Task<IEnumerable<AgendaResponse>> GetAllAsync();
         Task<AgendaResponse> GetByIdAsync(int id);
-        Task AddAsync(CreateAgendaRequest request);
-        Task UpdateAsync(UpdateAgendaRequest request);
-        Task DeleteAsync(int id);
     }
 }

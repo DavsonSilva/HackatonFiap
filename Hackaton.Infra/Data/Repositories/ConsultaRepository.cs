@@ -40,6 +40,8 @@ namespace Hackaton.Infra.Data.Repositories
         {
             return await set
                 .Where(c => c.PacienteId == pacienteId)
+                .Include(c => c.Paciente) 
+                .Include(c => c.Medico) 
                 .OrderByDescending(c => c.DataHora)
                 .ToListAsync();
         }
@@ -48,6 +50,8 @@ namespace Hackaton.Infra.Data.Repositories
         {
             return await set
                 .Where(c => c.MedicoId == medicoId)
+                .Include(c => c.Medico) 
+                .Include(c => c.Paciente) 
                 .OrderByDescending(c => c.DataHora)
                 .ToListAsync();
         }

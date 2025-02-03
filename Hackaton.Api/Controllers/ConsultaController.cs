@@ -34,30 +34,6 @@ namespace Hackaton.Api.Controllers
             return Ok(consulta);
         }
 
-        [HttpPost]
-        public async Task<ActionResult> Create([FromBody] CreateConsultaRequest request)
-        {
-            await _consultaService.AddAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = request.PacienteId }, request);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] UpdateConsultaRequest request)
-        {
-            if (id != request.Id)
-                return BadRequest();
-
-            await _consultaService.UpdateAsync(request);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
-        {
-            await _consultaService.DeleteAsync(id);
-            return NoContent();
-        }
-
         //[Authorize(Roles = "Paciente")]
         [HttpPost("agendar")]
         public async Task<IActionResult> AgendarConsulta([FromBody] CreateConsultaRequest request)
@@ -77,14 +53,24 @@ namespace Hackaton.Api.Controllers
         public async Task<ActionResult<IEnumerable<ConsultaResponse>>> GetHistoricoPaciente(int pacienteId)
         {
             var consultas = await _consultaService.GetHistoricoPacienteAsync(pacienteId);
+            if (consultas == null)
+            {
+                return NotFound(new { Message = "Nenhuma consulta encontrada para este Pasciente." });
+            }
             return Ok(consultas);
         }
 
         [HttpGet("historico/medico/{medicoId}")]
-        public async Task<ActionResult<IEnumerable<ConsultaResponse>>> GetHistoricoMedico(int medicoId)
+        public async Task<ActionResult<MedicoHistoricoResponse>> GetHistoricoMedico(int medicoId)
         {
-            var consultas = await _consultaService.GetHistoricoMedicoAsync(medicoId);
-            return Ok(consultas);
+            var historico = await _consultaService.GetHistoricoMedicoAsync(medicoId);
+
+            if (historico == null)
+            {
+                return NotFound(new { Message = "Nenhuma consulta encontrada para este médico." });
+            }
+
+            return Ok(historico);
         }
 
     }

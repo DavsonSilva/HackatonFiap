@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using SendGrid.Extensions.DependencyInjection;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -95,6 +96,12 @@ builder.Services.AddSwaggerGen(c =>
     {
         { jwtSecurityScheme, Array.Empty<string>() }
     });
+});
+
+builder.Services.AddSendGrid(options =>
+{
+    options.ApiKey = builder.Configuration
+    .GetSection("SendGridEmailSettings").GetValue<string>("APIKey");
 });
 
 var app = builder.Build();

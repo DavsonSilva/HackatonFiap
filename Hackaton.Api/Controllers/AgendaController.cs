@@ -1,5 +1,4 @@
-﻿using Hackaton.Domain.Requests.Agenda;
-using Hackaton.Domain.Responses;
+﻿using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,30 +30,6 @@ namespace Hackaton.Api.Controllers
                 return NotFound();
 
             return Ok(agenda);
-        }
-
-        [HttpPost]
-        public async Task<ActionResult> Create([FromBody] CreateAgendaRequest request)
-        {
-            await _agendaService.AddAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = request.DataHora}, request);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] UpdateAgendaRequest request)
-        {
-            //if (id != request.Id)
-            //    return BadRequest();
-
-            await _agendaService.UpdateAsync(request);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
-        {
-            await _agendaService.DeleteAsync(id);
-            return NoContent();
         }
     }
 }

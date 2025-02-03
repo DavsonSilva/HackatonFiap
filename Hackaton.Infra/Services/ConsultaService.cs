@@ -18,10 +18,9 @@ namespace Hackaton.Infra.Services
         private readonly INotificacaoService _notificacaoService;
         private readonly IMapper _mapper;
         private readonly IUsuarioRepository _usuarioRepository;
+        private readonly ISendGridService _sendGrid;
 
-
-
-        public ConsultaService(IConsultaRepository consultaRepository, IAgendaRepository agendaRepository, INotificacaoService notificacaoService, IMapper mapper, IMedicoRepository medicoRepository, IUsuarioRepository usuarioRepository)
+        public ConsultaService(IConsultaRepository consultaRepository, IAgendaRepository agendaRepository, INotificacaoService notificacaoService, IMapper mapper, IMedicoRepository medicoRepository, IUsuarioRepository usuarioRepository, ISendGridService sendGrid)
         {
             _consultaRepository = consultaRepository;
             _agendaRepository = agendaRepository;
@@ -29,6 +28,7 @@ namespace Hackaton.Infra.Services
             _mapper = mapper;
             _medicoRepository = medicoRepository;
             _usuarioRepository = usuarioRepository;
+            _sendGrid = sendGrid;
         }
 
         public async Task<IEnumerable<ConsultaResponse>> GetAllAsync()
@@ -116,16 +116,52 @@ namespace Hackaton.Infra.Services
             return _mapper.Map<ConsultaDetalhadaResponse>(consulta);
         }
 
-        public async Task<IEnumerable<ConsultaResponse>> GetHistoricoPacienteAsync(int pacienteId)
+        public async Task<PacienteHistoricoResponse> GetHistoricoPacienteAsync(int pacienteId)
         {
             var consultas = await _consultaRepository.GetHistoricoPacienteAsync(pacienteId);
-            return _mapper.Map<IEnumerable<ConsultaResponse>>(consultas);
+
+            if (!consultas.Any())
+            {
+                return null; 
+            }
+
+            var response = new PacienteHistoricoResponse
+            {
+                PacienteId = pacienteId,
+                NomePaciente = consultas.First().Paciente?.Nome ?? "Paciente Desconhecido",
+                Consultas = consultas.Select(c => new ConsultaDetalhadaPascienteResponse
+                {
+                    Id = c.Id,
+                    NomeMedico = c.Medico?.Nome ?? "Médico Desconhecido",
+                    DataHora = c.DataHora
+                }).ToList()
+            };
+
+            return response;
         }
 
-        public async Task<IEnumerable<ConsultaResponse>> GetHistoricoMedicoAsync(int medicoId)
+        public async Task<MedicoHistoricoResponse> GetHistoricoMedicoAsync(int medicoId)
         {
             var consultas = await _consultaRepository.GetHistoricoMedicoAsync(medicoId);
-            return _mapper.Map<IEnumerable<ConsultaResponse>>(consultas);
+
+            if (!consultas.Any())
+            {
+                return null; 
+            }
+
+            var response = new MedicoHistoricoResponse
+            {
+                MedicoId = medicoId,
+                NomeMedico = consultas.First().Medico?.Nome ?? "Médico Desconhecido",
+                Consultas = consultas.Select(c => new ConsultaDetalhadaMedicoResponse
+                {
+                    Id = c.Id,
+                    NomePaciente = c.Paciente?.Nome ?? "Paciente Desconhecido",
+                    DataHora = c.DataHora
+                }).ToList()
+            };
+
+            return response;
         }
 
         public async Task<ConsultaResponse> AgendarConsultaAsync(CreateConsultaRequest request)
@@ -160,6 +196,12 @@ namespace Hackaton.Infra.Services
             // 5️⃣ Salvar no banco
             await _consultaRepository.AddAsync(consulta);
             await _agendaRepository.UpdateAsync(agenda);
+
+
+            await _sendGrid.SendAppointmentNotificationAsync("davson1@hotmail.com", "Dr Davson", "Sly", DateTime.Now.ToString("d"), DateTime.Now.ToString("d"));
+
+            //await _sendGrid.SendAppointmentNotificationAsync(consulta.Medico.Email, consulta.Medico.Nome, consulta.Paciente.Nome, DateTime.Now.ToString("d"), consulta.DataHora.ToString("d"));
+
 
             // 6️⃣ Retornar resposta
             return new ConsultaResponse
