@@ -20,13 +20,13 @@ namespace Hackaton.Infra.Services
 
         public async Task<IEnumerable<AgendaResponse>> GetAllAsync()
         {
-            var agendas = await _agendaRepository.AllAsync();
+            var agendas = await _agendaRepository.GetAllWithDetailsAsync();
             return _mapper.Map<IEnumerable<AgendaResponse>>(agendas);
         }
 
         public async Task<AgendaResponse> GetByIdAsync(int id)
         {
-            var agenda = await _agendaRepository.FindByIdAsync(id);
+            var agenda = await _agendaRepository.GetByIdWithDetailsAsync(id);
             return _mapper.Map<AgendaResponse>(agenda);
         }
 

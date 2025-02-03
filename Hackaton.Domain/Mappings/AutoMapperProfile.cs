@@ -41,8 +41,17 @@ namespace Hackaton.Domain.Mappings
                 .ForMember(dest => dest.NomeMedico, opt => opt.MapFrom(src => src.Medico.Nome))
                 .ForMember(dest => dest.NomePaciente, opt => opt.MapFrom(src => src.Paciente.Nome));
 
-            CreateMap<Consulta, ConsultaResponse>()
-               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.DataHora >= DateTime.UtcNow ? "Agendada" : "Realizada"));
+            //CreateMap<Consulta, ConsultaResponse>()
+            //   .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.DataHora >= DateTime.UtcNow ? "Agendada" : "Realizada"));
+
+            CreateMap<CreateMedicoRequest, Medico>()
+                .ForMember(dest => dest.HorariosDisponiveis, opt => opt.Ignore()); 
+
+            CreateMap<AgendaRequest, Agenda>();
+
+            CreateMap<Medico, MedicoResponse>()
+                .ForMember(dest => dest.HorariosDisponiveis, opt => opt.MapFrom(src => src.HorariosDisponiveis));
+
         }
     }
 }

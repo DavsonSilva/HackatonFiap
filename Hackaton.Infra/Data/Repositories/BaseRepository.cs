@@ -40,12 +40,14 @@ namespace Hackaton.Infra.Data.Repositories
 
         public virtual async Task DeleteAsync(long id)
         {
-            var entity = await set.FindAsync(id);
-            if (entity != null)
+            var entity = await set.FindAsync((int)id);
+            if (entity == null)
             {
-                set.Remove(entity);
-                await _context.SaveChangesAsync();
+                throw new Exception("Registro não encontrado.");
             }
+
+            set.Remove(entity);
+            await _context.SaveChangesAsync();
         }
 
         public virtual async Task<TEntity> FindByIdAsync(long id)

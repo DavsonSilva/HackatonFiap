@@ -1,6 +1,7 @@
 ﻿using Hackaton.Domain.Requests.Consulta;
 using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hackaton.Api.Controllers
@@ -55,6 +56,14 @@ namespace Hackaton.Api.Controllers
         {
             await _consultaService.DeleteAsync(id);
             return NoContent();
+        }
+
+        //[Authorize(Roles = "Paciente")]
+        [HttpPost("agendar")]
+        public async Task<IActionResult> AgendarConsulta([FromBody] CreateConsultaRequest request)
+        {
+            var consulta = await _consultaService.AgendarConsultaAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = consulta.Id }, consulta);
         }
 
         [HttpPost("cancelar")]

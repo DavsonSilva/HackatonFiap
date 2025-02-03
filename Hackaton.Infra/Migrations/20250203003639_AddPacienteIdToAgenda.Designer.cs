@@ -3,6 +3,7 @@ using System;
 using Hackaton.Infra.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hackaton.Infra.Migrations
 {
     [DbContext(typeof(FiapDbContext))]
-    partial class FiapDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250203003639_AddPacienteIdToAgenda")]
+    partial class AddPacienteIdToAgenda
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -157,11 +160,6 @@ namespace Hackaton.Infra.Migrations
             modelBuilder.Entity("Hackaton.Domain.Entities.PacienteEntity.Paciente", b =>
                 {
                     b.HasBaseType("Hackaton.Domain.Entities.UsuarioEntity.Usuario");
-
-                    b.Property<string>("CPF")
-                        .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("character varying(14)");
 
                     b.HasDiscriminator().HasValue("Paciente");
                 });

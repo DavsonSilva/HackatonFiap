@@ -13,24 +13,24 @@ namespace Hackaton.Infra.Data.Repositories
 
         public async Task<IEnumerable<Medico>> GetAllAsync()
         {
-            return await set.ToListAsync();
+            return await set
+                .Include(m => m.HorariosDisponiveis)
+                    .ThenInclude(a => a.Paciente)
+                .ToListAsync();
         }
 
         public async Task<Medico> GetByIdAsync(int id)
         {
-            return await set.FindAsync(id);
-        }
-
-        public async Task<IEnumerable<Medico>> SearchAsync(string query)
-        {
             return await set
-                .Where(m => m.Nome.Contains(query) || m.CRM.Contains(query))
-                .ToListAsync();
+                .Include(m => m.HorariosDisponiveis)
+                    .ThenInclude(a => a.Paciente) 
+                .FirstOrDefaultAsync(m => m.Id == id);
         }
 
         public async Task AddAsync(Medico medico)
         {
             await set.AddAsync(medico);
+
             await _context.SaveChangesAsync();
         }
 

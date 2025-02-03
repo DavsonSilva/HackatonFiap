@@ -37,14 +37,14 @@ namespace Hackaton.Api.Controllers
         public async Task<ActionResult> Create([FromBody] CreateAgendaRequest request)
         {
             await _agendaService.AddAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = request.MedicoId }, request);
+            return CreatedAtAction(nameof(GetById), new { id = request.DataHora}, request);
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(int id, [FromBody] UpdateAgendaRequest request)
         {
-            if (id != request.Id)
-                return BadRequest();
+            //if (id != request.Id)
+            //    return BadRequest();
 
             await _agendaService.UpdateAsync(request);
             return NoContent();

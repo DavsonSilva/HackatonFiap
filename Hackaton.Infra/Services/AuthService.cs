@@ -41,7 +41,6 @@ namespace Hackaton.Infra.Services
                 Role = usuario is Medico ? "Medico" : "Paciente"
             };
         }
-
         private string GenerateJwtToken(Usuario usuario)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]));

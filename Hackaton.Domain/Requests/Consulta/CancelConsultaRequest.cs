@@ -3,7 +3,6 @@
     public class CancelConsultaRequest
     {
         public int ConsultaId { get; set; }
-        public int UsuarioId { get; set; } 
-        public string Motivo { get; set; }
+        public string Motivo { get; set; } = string.Empty;
     }
 }

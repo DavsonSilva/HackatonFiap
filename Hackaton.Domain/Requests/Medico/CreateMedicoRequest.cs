@@ -7,6 +7,5 @@ namespace Hackaton.Domain.Requests.Medico
         public string CRM { get; set; }
         public string Email { get; set; }
         public string Senha { get; set; }
-        public List<AgendaRequest>? HorariosDisponiveis { get; set; } = new List<AgendaRequest>();
     }
 }

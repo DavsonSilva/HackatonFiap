@@ -1,4 +1,4 @@
-﻿using Hackaton.Domain.Entities.MedicoEntity;
+﻿using Hackaton.Domain.Requests.Agenda;
 using Hackaton.Domain.Requests.Medico;
 using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Hackaton.Api.Controllers
 {
-    //[Authorize]
     [Route("api/v1/[controller]")]
     [ApiController]
     public class MedicoController : ControllerBase
@@ -19,13 +18,6 @@ namespace Hackaton.Api.Controllers
             _medicoService = medicoService;
         }
 
-        [Authorize(Roles = "Medico")]
-        [HttpGet("dashboard")]
-        public IActionResult GetDashboard()
-        {
-            return Ok("Apenas médicos podem ver isso.");
-        }
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MedicoResponse>>> GetAll()
         {
@@ -34,7 +26,6 @@ namespace Hackaton.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<ActionResult<MedicoResponse>> GetById(int id)
         {
             var medico = await _medicoService.GetByIdAsync(id);
@@ -45,34 +36,51 @@ namespace Hackaton.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] CreateMedicoRequest request)
+        public async Task<ActionResult<MedicoResponse>> Create([FromBody] CreateMedicoRequest request)
         {
-            await _medicoService.AddAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = request.CRM }, request);
+            var medicoCriado = await _medicoService.AddAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = medicoCriado.Id }, medicoCriado);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] UpdateMedicoRequest request)
+        [HttpPut("atualizarMedico")]
+        public async Task<ActionResult> Update([FromBody] UpdateMedicoRequest request)
         {
-            if (id != request.Id)
+            if (request.Id != request.Id)
                 return BadRequest();
 
             await _medicoService.UpdateAsync(request);
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("excluirMedico/{id}")]
         public async Task<ActionResult> Delete(int id)
         {
             await _medicoService.DeleteAsync(id);
             return NoContent();
         }
 
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<MedicoResponse>>> Search([FromQuery] string query)
+        [HttpPost("{id}/agenda")]
+        [Authorize(Roles = "Medico")]
+        public async Task<IActionResult> AddAgenda(int id, [FromBody] List<CreateAgendaRequest> agendaRequests)
         {
-            var medicos = await _medicoService.SearchAsync(query);
-            return Ok(medicos);
+            await _medicoService.AddAgendaAsync(id, agendaRequests);
+            return NoContent();
+        }
+
+        [HttpPut("{id}/agenda/{agendaId}")]
+        [Authorize(Roles = "Medico")]
+        public async Task<IActionResult> EditarAgenda(int id, int agendaId, [FromBody] UpdateAgendaRequest request)
+        {
+            await _medicoService.EditarAgendaAsync(id, agendaId, request);
+            return Ok(new { message = "Horário atualizado com sucesso!" });
+        }
+
+        [HttpDelete("{medicoId}/agenda/{agendaId}")]
+        [Authorize(Roles = "Medico")]
+        public async Task<IActionResult> ExcluirAgenda(int medicoId, int agendaId)
+        {
+            await _medicoService.ExcluirAgendaAsync(medicoId, agendaId);
+            return Ok(new { message = "Horário removido com sucesso!" });
         }
     }
 }

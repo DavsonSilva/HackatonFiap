@@ -7,7 +7,7 @@ namespace Hackaton.Domain.Services
     {
         Task<IEnumerable<PacienteResponse>> GetAllAsync();
         Task<PacienteResponse> GetByIdAsync(int id);
-        Task AddAsync(CreatePacienteRequest request);
+        Task<PacienteResponse> AddAsync(CreatePacienteRequest request);
         Task UpdateAsync(UpdatePacienteRequest request);
         Task DeleteAsync(int id);
     }

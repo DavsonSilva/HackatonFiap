@@ -30,15 +30,37 @@ namespace Hackaton.Infra.Services
             return _mapper.Map<PacienteResponse>(paciente);
         }
 
-        public async Task AddAsync(CreatePacienteRequest request)
+        public async Task<PacienteResponse> AddAsync(CreatePacienteRequest request)
         {
+            var existe = await _pacienteRepository.FindByEmailOrCPFAsync(request.Email, request.CPF);
+            if (existe != null)
+            {
+                throw new Exception("CPF ou Email já cadastrado.");
+            }
+
             var paciente = _mapper.Map<Paciente>(request);
             await _pacienteRepository.InsertAsync(paciente);
+
+            return _mapper.Map<PacienteResponse>(paciente);
         }
 
         public async Task UpdateAsync(UpdatePacienteRequest request)
         {
-            var paciente = _mapper.Map<Paciente>(request);
+            var paciente = await _pacienteRepository.FindByIdAsync(request.Id);
+            if (paciente == null)
+            {
+                throw new Exception("Paciente não encontrado.");
+            }
+
+            paciente.Nome = request.Nome;
+            paciente.CPF = request.CPF;
+            paciente.Email = request.Email;
+
+            if (!string.IsNullOrEmpty(request.Senha))
+            {
+                paciente.Senha = request.Senha;
+            }
+
             await _pacienteRepository.UpdateAsync(paciente);
         }
 

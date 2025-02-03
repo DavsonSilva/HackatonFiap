@@ -13,5 +13,9 @@ namespace Hackaton.Domain.Services
         Task CancelarConsultaAsync(CancelConsultaRequest request);
         Task UpdateAsync(UpdateConsultaRequest request);
         Task DeleteAsync(int id);
+
+
+
+        Task<ConsultaResponse> AgendarConsultaAsync(CreateConsultaRequest request);
     }
 }

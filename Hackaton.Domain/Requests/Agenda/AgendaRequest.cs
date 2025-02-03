@@ -1,9 +1,15 @@
 ﻿namespace Hackaton.Domain.Requests.Agenda
 {
-    public class AgendaRequest 
+    public class AgendaRequest
     {
-        public string Id { get; set; }
-        public DateTime DataHora { get; set; }
-        public bool Disponivel { get; set; }
+        private DateTime _dataHora;
+
+        public DateTime DataHora
+        {
+            get => _dataHora;
+            set => _dataHora = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+        }
+
+        public bool Disponivel { get; set; } = true;
     }
 }

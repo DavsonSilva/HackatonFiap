@@ -34,16 +34,16 @@ namespace Hackaton.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] CreatePacienteRequest request)
+        public async Task<ActionResult<PacienteResponse>> Create([FromBody] CreatePacienteRequest request)
         {
-            await _pacienteService.AddAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = request.Email }, request);
+            var pacienteCriado = await _pacienteService.AddAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = pacienteCriado.Id }, pacienteCriado);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, [FromBody] UpdatePacienteRequest request)
+        [HttpPut]
+        public async Task<ActionResult> Update([FromBody] UpdatePacienteRequest request)
         {
-            if (id.ToString() != request.Id)
+            if (request.Id != request.Id)
                 return BadRequest();
 
             await _pacienteService.UpdateAsync(request);
@@ -58,4 +58,3 @@ namespace Hackaton.Api.Controllers
         }
     }
 }
-
