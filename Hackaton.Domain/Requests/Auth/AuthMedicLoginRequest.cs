@@ -1,8 +1,8 @@
 ﻿namespace Hackaton.Domain.Requests.Auth
 {
-    public class AuthLoginRequest
+    public class AuthMedicLoginRequest
     {
-        public string Email { get; set; }
+        public string CRM { get; set; }
         public string Senha { get; set; }
     }
 }

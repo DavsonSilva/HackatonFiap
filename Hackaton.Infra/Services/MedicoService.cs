@@ -13,14 +13,16 @@ namespace Hackaton.Infra.Services
     {
         private readonly IMedicoRepository _medicoRepository;
         private readonly IAgendaRepository _agendaRepository;
+        private readonly IPasswordHasherService _passwordHasherService;
 
         private readonly IMapper _mapper;
 
-        public MedicoService(IMedicoRepository medicoRepository, IMapper mapper, IAgendaRepository agendaRepository)
+        public MedicoService(IMedicoRepository medicoRepository, IMapper mapper, IAgendaRepository agendaRepository, IPasswordHasherService passwordHasherService)
         {
             _medicoRepository = medicoRepository;
             _mapper = mapper;
             _agendaRepository = agendaRepository;
+            _passwordHasherService = passwordHasherService;
         }
 
         public async Task<IEnumerable<MedicoResponse>> GetAllAsync()
@@ -81,6 +83,12 @@ namespace Hackaton.Infra.Services
         {
             var medico = _mapper.Map<Medico>(request);
 
+            medico.Senha = _passwordHasherService.HashPassword(request.Senha);
+            if (!_passwordHasherService.VerifyPassword(request.Senha, medico.Senha))
+            {
+                throw new Exception("Senha inválida.");
+            }
+
             await _medicoRepository.AddAsync(medico);
 
             var medicoSalvo = await _medicoRepository.GetByIdAsync(medico.Id);
@@ -102,7 +110,7 @@ namespace Hackaton.Infra.Services
 
             if (!string.IsNullOrEmpty(request.Senha))
             {
-                medico.Senha = request.Senha; 
+                medico.Senha = _passwordHasherService.HashPassword(request.Senha);
             }
 
             await _medicoRepository.UpdateAsync(medico);

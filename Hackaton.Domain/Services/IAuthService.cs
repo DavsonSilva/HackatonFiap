@@ -5,6 +5,7 @@ namespace Hackaton.Domain.Services
 {
     public interface IAuthService
     {
-        Task<LoginResponse> AuthenticateAsync(AuthLoginRequest request);
+        Task<LoginResponse> AuthenticateAsync(AuthUserLoginRequest request);
+        Task<LoginResponse> AuthenticateMedicAsync(AuthMedicLoginRequest request);
     }
 }

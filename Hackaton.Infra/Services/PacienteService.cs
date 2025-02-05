@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Hackaton.Domain.Entities.MedicoEntity;
 using Hackaton.Domain.Entities.PacienteEntity;
 using Hackaton.Domain.Repositories;
 using Hackaton.Domain.Requests.Paciente;
@@ -11,11 +12,13 @@ namespace Hackaton.Infra.Services
     {
         private readonly IPacienteRepository _pacienteRepository;
         private readonly IMapper _mapper;
+        private readonly IPasswordHasherService _passwordHasherService;
 
-        public PacienteService(IPacienteRepository pacienteRepository, IMapper mapper)
+        public PacienteService(IPacienteRepository pacienteRepository, IMapper mapper, IPasswordHasherService passwordHasherService)
         {
             _pacienteRepository = pacienteRepository;
             _mapper = mapper;
+            _passwordHasherService = passwordHasherService;
         }
 
         public async Task<IEnumerable<PacienteResponse>> GetAllAsync()
@@ -39,6 +42,13 @@ namespace Hackaton.Infra.Services
             }
 
             var paciente = _mapper.Map<Paciente>(request);
+
+            paciente.Senha = _passwordHasherService.HashPassword(request.Senha);
+            if (!_passwordHasherService.VerifyPassword(request.Senha, paciente.Senha))
+            {
+                throw new Exception("Senha inválida.");
+            }
+
             await _pacienteRepository.InsertAsync(paciente);
 
             return _mapper.Map<PacienteResponse>(paciente);
@@ -58,7 +68,7 @@ namespace Hackaton.Infra.Services
 
             if (!string.IsNullOrEmpty(request.Senha))
             {
-                paciente.Senha = request.Senha;
+                paciente.Senha = _passwordHasherService.HashPassword(request.Senha);
             }
 
             await _pacienteRepository.UpdateAsync(paciente);

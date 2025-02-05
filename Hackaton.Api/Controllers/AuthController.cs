@@ -1,6 +1,5 @@
 ﻿using Hackaton.Domain.Requests.Auth;
 using Hackaton.Domain.Services;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hackaton.Api.Controllers
@@ -16,10 +15,17 @@ namespace Hackaton.Api.Controllers
             _authService = authService;
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] AuthLoginRequest request)
+        [HttpPost("loginUser")]
+        public async Task<IActionResult> LoginUser([FromBody] AuthUserLoginRequest request)
         {
             var response = await _authService.AuthenticateAsync(request);
+            return Ok(response);
+        }
+
+        [HttpPost("loginMedic")]
+        public async Task<IActionResult> LoginMedic([FromBody] AuthMedicLoginRequest request)
+        {
+            var response = await _authService.AuthenticateMedicAsync(request);
             return Ok(response);
         }
     }

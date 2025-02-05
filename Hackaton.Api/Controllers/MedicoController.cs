@@ -26,6 +26,7 @@ namespace Hackaton.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Medico")]
         public async Task<ActionResult<MedicoResponse>> GetById(int id)
         {
             var medico = await _medicoService.GetByIdAsync(id);

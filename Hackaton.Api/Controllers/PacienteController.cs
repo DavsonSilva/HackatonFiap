@@ -1,6 +1,7 @@
 ﻿using Hackaton.Domain.Requests.Paciente;
 using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hackaton.Api.Controllers
@@ -24,6 +25,7 @@ namespace Hackaton.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Paciente")]
         public async Task<ActionResult<PacienteResponse>> GetById(int id)
         {
             var paciente = await _pacienteService.GetByIdAsync(id);
