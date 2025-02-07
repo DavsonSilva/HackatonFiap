@@ -1,4 +1,5 @@
 ﻿using Hackaton.Domain.Entities.ConsultaEntity;
+using Hackaton.Domain.Enum;
 using Hackaton.Domain.Repositories;
 using Hackaton.Infra.Data.Context;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +30,10 @@ namespace Hackaton.Infra.Data.Repositories
 
         public async Task<Consulta> GetByIdAsync(int id)
         {
-            return await set.FindAsync(id);
+            return await set
+            .Include(c => c.Medico) 
+            .Include(c => c.Paciente) 
+            .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task AddAsync(Consulta consulta)
@@ -64,6 +68,14 @@ namespace Hackaton.Infra.Data.Repositories
                 .Include(c => c.Medico) 
                 .Include(c => c.Paciente) 
                 .OrderByDescending(c => c.DataHora)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Consulta>> GetPendentesByMedicoAsync(int medicoId)
+        {
+            return await set
+                .Where(c => c.MedicoId == medicoId && c.Status == StatusConsulta.Pendente)
+                .OrderBy(c => c.DataHora)
                 .ToListAsync();
         }
     }

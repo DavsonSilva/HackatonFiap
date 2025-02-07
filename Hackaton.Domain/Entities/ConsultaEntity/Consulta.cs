@@ -3,6 +3,7 @@ using Hackaton.Domain.Entities.MedicoEntity;
 using Hackaton.Domain.Entities.PacienteEntity;
 using Hackaton.Domain.Entities.BaseEntity;
 using Hackaton.Domain.Entities.AgendaEntity;
+using Hackaton.Domain.Enum;
 
 namespace Hackaton.Domain.Entities.ConsultaEntity
 {
@@ -22,5 +23,6 @@ namespace Hackaton.Domain.Entities.ConsultaEntity
         public virtual Agenda Agenda { get; set; }
 
         public DateTime DataHora { get; set; }
+        public StatusConsulta Status { get; set; } = StatusConsulta.Pendente;
     }
 }

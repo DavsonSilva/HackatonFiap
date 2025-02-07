@@ -9,5 +9,6 @@
         public string NomeMedico { get; set; } 
         public int AgendaId { get; set; }
         public DateTime DataHora { get; set; }
+        public string Status { get; set; }
     }
 }

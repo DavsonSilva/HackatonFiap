@@ -10,5 +10,6 @@ namespace Hackaton.Domain.Services
         Task AddAsync(CreateNotificacaoRequest request);
         Task<IEnumerable<NotificacaoResponse>> GetByUsuarioIdAsync(int usuarioId);
         Task DeleteAsync(int id);
+        Task EnviarNotificacaoAsync(int usuarioId, string mensagem);
     }
 }

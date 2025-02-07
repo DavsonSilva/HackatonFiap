@@ -10,5 +10,6 @@ namespace Hackaton.Domain.Repositories
         Task DeleteAsync(int id);
         Task<IEnumerable<Consulta>> GetHistoricoPacienteAsync(int pacienteId);
         Task<IEnumerable<Consulta>> GetHistoricoMedicoAsync(int medicoId);
+        Task<IEnumerable<Consulta>> GetPendentesByMedicoAsync(int medicoId);
     }
 }

@@ -11,5 +11,8 @@ namespace Hackaton.Domain.Services
         Task<MedicoHistoricoResponse> GetHistoricoMedicoAsync(int medicoId);
         Task CancelarConsultaAsync(CancelConsultaRequest request);
         Task<ConsultaResponse> AgendarConsultaAsync(CreateConsultaRequest request);
+        Task ResponderConsultaAsync(ResponderConsultaRequest request);
+        Task<IEnumerable<ConsultaResponse>> GetPendentesPorMedicoAsync(int medicoId);
+        Task<IEnumerable<ConsultaResponse>> GetPendentesAsync(int medicoId);
     }
 }

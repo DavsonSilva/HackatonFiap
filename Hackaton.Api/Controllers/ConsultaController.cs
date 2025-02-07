@@ -31,7 +31,7 @@ namespace Hackaton.Api.Controllers
             return Ok(consultas);
         }
 
-        //[Authorize(Roles = "Paciente")]
+        [Authorize(Roles = "Paciente")]
         [HttpPost("agendar")]
         public async Task<IActionResult> AgendarConsulta([FromBody] CreateConsultaRequest request)
         {
@@ -70,5 +70,20 @@ namespace Hackaton.Api.Controllers
             return Ok(historico);
         }
 
+        [HttpGet("pendentes/{medicoId}")]
+        [Authorize(Roles = "Medico")]
+        public async Task<ActionResult<IEnumerable<ConsultaResponse>>> GetPendentes(int medicoId)
+        {
+            var consultasPendentes = await _consultaService.GetPendentesAsync(medicoId);
+            return Ok(consultasPendentes);
+        }
+
+        [HttpPost("responder")]
+        [Authorize(Roles = "Medico")]
+        public async Task<IActionResult> ResponderConsulta([FromBody] ResponderConsultaRequest request)
+        {
+            await _consultaService.ResponderConsultaAsync(request);
+            return Ok(new { message = request.Aceitar ? "Consulta confirmada com sucesso!" : "Consulta recusada com sucesso!" });
+        }
     }
 }

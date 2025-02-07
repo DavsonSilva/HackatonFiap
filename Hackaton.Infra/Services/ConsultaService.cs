@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Hackaton.Domain.Entities.ConsultaEntity;
 using Hackaton.Domain.Entities.PacienteEntity;
+using Hackaton.Domain.Enum;
 using Hackaton.Domain.Repositories;
 using Hackaton.Domain.Requests.Base;
 using Hackaton.Domain.Requests.Consulta;
@@ -87,28 +88,36 @@ namespace Hackaton.Infra.Services
             var consulta = await _consultaRepository.GetByIdAsync(request.ConsultaId);
             if (consulta == null)
             {
+                Console.WriteLine($"Consulta não encontrada: ID={request.ConsultaId}");
                 throw new Exception("Consulta não encontrada.");
             }
 
             var agenda = await _agendaRepository.GetByIdAsync(consulta.AgendaId);
             if (agenda == null)
             {
+                Console.WriteLine($"Erro: Agenda não encontrada para a consulta ID={consulta.Id}");
                 throw new Exception("Erro ao recuperar a agenda da consulta.");
             }
 
+
             agenda.Disponivel = true;
-            agenda.PacienteId = null; 
+            agenda.PacienteId = null;  
             await _agendaRepository.UpdateAsync(agenda);
+
 
             await _consultaRepository.DeleteAsync(consulta.Id);
 
-            var notificacao = new CreateNotificacaoRequest
-            {
-                UsuarioId = consulta.MedicoId, 
-                Mensagem = $"A consulta marcada para {consulta.DataHora} foi cancelada. Motivo: {request.Motivo}"
-            };
+            string mensagem = $"A consulta marcada para {consulta.DataHora} foi cancelada. Motivo: {request.Motivo}";
 
-            await _notificacaoService.AddAsync(notificacao);
+            await _notificacaoService.EnviarNotificacaoAsync(consulta.MedicoId, mensagem);
+            await _notificacaoService.EnviarNotificacaoAsync(consulta.PacienteId, mensagem);
+            //enviar e-mail tmb
+
+            //await _sendGrid.SendAppointmentNotificationAsync(
+            //    consulta.Paciente.Email,
+            //    request.Aceitar ? "Consulta Confirmada" : "Consulta Recusada",
+            //    mensagem
+            //);
         }
 
         public async Task<PacienteHistoricoResponse> GetHistoricoPacienteAsync(int pacienteId)
@@ -167,31 +176,22 @@ namespace Hackaton.Infra.Services
                 throw new Exception("O horário selecionado não está disponível.");
             }
 
-            var paciente = await _usuarioRepository.GetByIdAsync(request.PacienteId);
-            if (paciente == null)
-            {
-                throw new Exception("Paciente inválido.");
-            }
-
             var consulta = new Consulta
             {
                 PacienteId = request.PacienteId,
-                MedicoId = agenda.MedicoId, 
+                MedicoId = agenda.MedicoId,
                 AgendaId = request.AgendaId,
-                DataHora = agenda.DataHora
+                DataHora = agenda.DataHora,
+                Status = StatusConsulta.Pendente
             };
 
-            agenda.PacienteId = request.PacienteId;
-            agenda.Disponivel = false;
-
-            await _consultaRepository.AddAsync(consulta);
+            agenda.Disponivel = false; 
             await _agendaRepository.UpdateAsync(agenda);
 
-            //arrumar o envio do e-mail aqi
-            await _sendGrid.SendAppointmentNotificationAsync("davson1@hotmail.com", "Dr Davson", "Sly", DateTime.Now.ToString("d"), DateTime.Now.ToString("d"));
+            await _consultaRepository.AddAsync(consulta);
 
-            //await _sendGrid.SendAppointmentNotificationAsync(consulta.Medico.Email, consulta.Medico.Nome, consulta.Paciente.Nome, DateTime.Now.ToString("d"), consulta.DataHora.ToString("d"));
-
+            await _notificacaoService.EnviarNotificacaoAsync(consulta.MedicoId,
+                $"Nova consulta pendente para {consulta.DataHora}. Acesse para aceitar ou recusar.");
 
             return new ConsultaResponse
             {
@@ -199,8 +199,62 @@ namespace Hackaton.Infra.Services
                 PacienteId = consulta.PacienteId,
                 MedicoId = consulta.MedicoId,
                 AgendaId = consulta.AgendaId,
-                DataHora = consulta.DataHora
+                DataHora = consulta.DataHora,
+                Status = consulta.Status.ToString()
             };
+        }
+
+        public async Task ResponderConsultaAsync(ResponderConsultaRequest request)
+        {
+            var consulta = await _consultaRepository.GetByIdAsync(request.ConsultaId);
+            if (consulta == null)
+            {
+                throw new Exception("Consulta não encontrada.");
+            }
+
+            consulta.Status = request.Aceitar ? StatusConsulta.Confirmada : StatusConsulta.Recusada;
+            await _consultaRepository.UpdateAsync(consulta);
+
+            var agenda = await _agendaRepository.GetByIdAsync(consulta.AgendaId);
+            if (agenda != null)
+            {
+                if (request.Aceitar)
+                {
+                    agenda.PacienteId = consulta.PacienteId;  
+                    agenda.Disponivel = false;
+                }
+                else
+                {
+                    agenda.PacienteId = null;  
+                    agenda.Disponivel = true;
+                }
+
+                await _agendaRepository.UpdateAsync(agenda);
+            }
+
+            string mensagem = request.Aceitar
+                ? $"Sua consulta com o Dr. {consulta.Medico.Nome} foi confirmada para {consulta.DataHora}."
+                : $"Sua consulta com o Dr. {consulta.Medico.Nome} foi recusada.";
+
+            await _notificacaoService.EnviarNotificacaoAsync(consulta.PacienteId, mensagem);
+            // eviar e-mail
+            //await _sendGrid.SendAppointmentNotificationAsync(
+            //    consulta.Paciente.Email,
+            //    request.Aceitar ? "Consulta Confirmada" : "Consulta Recusada",
+            //    mensagem
+            //);
+        }
+
+        public async Task<IEnumerable<ConsultaResponse>> GetPendentesPorMedicoAsync(int medicoId)
+        {
+            var consultas = await _consultaRepository.WhereAsync(c => c.MedicoId == medicoId && c.Status == StatusConsulta.Pendente);
+            return _mapper.Map<IEnumerable<ConsultaResponse>>(consultas);
+        }
+
+        public async Task<IEnumerable<ConsultaResponse>> GetPendentesAsync(int medicoId)
+        {
+            var consultas = await _consultaRepository.GetPendentesByMedicoAsync(medicoId);
+            return _mapper.Map<IEnumerable<ConsultaResponse>>(consultas);
         }
     }
 }

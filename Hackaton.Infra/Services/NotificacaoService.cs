@@ -48,5 +48,17 @@ namespace Hackaton.Infra.Services
         {
             await _notificacaoRepository.DeleteAsync(id);
         }
+
+        public async Task EnviarNotificacaoAsync(int usuarioId, string mensagem)
+        {
+            var notificacao = new Notificacao
+            {
+                UsuarioId = usuarioId,
+                Mensagem = mensagem,
+                DataEnvio = DateTime.UtcNow
+            };
+
+            await _notificacaoRepository.InsertAsync(notificacao);
+        }
     }
 }

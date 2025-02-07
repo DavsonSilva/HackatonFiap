@@ -1,7 +1,9 @@
 ﻿using Hackaton.Domain.Requests.Agenda;
+using Hackaton.Domain.Requests.Consulta;
 using Hackaton.Domain.Requests.Medico;
 using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
+using Hackaton.Infra.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

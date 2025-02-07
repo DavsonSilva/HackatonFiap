@@ -3,6 +3,7 @@ using System;
 using Hackaton.Infra.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hackaton.Infra.Migrations
 {
     [DbContext(typeof(FiapDbContext))]
-    partial class FiapDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250206231346_atualizacaoDeaceitarAgendaaamento")]
+    partial class atualizacaoDeaceitarAgendaaamento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
