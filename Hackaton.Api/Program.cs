@@ -109,6 +109,9 @@ builder.Services.AddSendGrid(options =>
 
 var app = builder.Build();
 
+using var serviceScope = app.Services.CreateScope();
+serviceScope.ServiceProvider.GetService<FiapDbContext>().Database.Migrate();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
