@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Hackaton.Domain.Commands;
 using Hackaton.Domain.Entities.ConsultaEntity;
 using Hackaton.Domain.Entities.PacienteEntity;
 using Hackaton.Domain.Enum;
@@ -20,16 +21,22 @@ namespace Hackaton.Infra.Services
         private readonly INotificacaoService _notificacaoService;
         private readonly IMapper _mapper;
         private readonly IUsuarioRepository _usuarioRepository;
-        private readonly ISendGridService _sendGrid;
+        private readonly ServicePublisherRabbit _servicePublisherRabbit;
+        private readonly IMedicoRepository _medicoRepository;
+        private readonly IPacienteRepository _pacienteRepository;
 
-        public ConsultaService(IConsultaRepository consultaRepository, IAgendaRepository agendaRepository, INotificacaoService notificacaoService, IMapper mapper, IUsuarioRepository usuarioRepository, ISendGridService sendGrid)
+        public ConsultaService(IConsultaRepository consultaRepository, IAgendaRepository agendaRepository,
+            INotificacaoService notificacaoService, IMapper mapper, IUsuarioRepository usuarioRepository,
+            ServicePublisherRabbit servicePublisherRabbit, IMedicoRepository medicoRepository, IPacienteRepository pacienteRepository)
         {
             _consultaRepository = consultaRepository;
             _agendaRepository = agendaRepository;
             _notificacaoService = notificacaoService;
             _mapper = mapper;
             _usuarioRepository = usuarioRepository;
-            _sendGrid = sendGrid;
+            _servicePublisherRabbit = servicePublisherRabbit;
+            _medicoRepository = medicoRepository;
+            _pacienteRepository = pacienteRepository;
         }
 
         public async Task<ConsultaListaResponse> GetAllAsync(BaseConsultaPaginada request)
@@ -42,7 +49,7 @@ namespace Hackaton.Infra.Services
 
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
-                string searchTerm = request.Search.ToLower(); 
+                string searchTerm = request.Search.ToLower();
 
                 consultasQuery = consultasQuery.Where(c =>
                     EF.Functions.ILike(c.Medico.Nome, $"%{searchTerm}%") ||
@@ -101,16 +108,19 @@ namespace Hackaton.Infra.Services
 
 
             agenda.Disponivel = true;
-            agenda.PacienteId = null;  
+            agenda.PacienteId = null;
+
             await _agendaRepository.UpdateAsync(agenda);
-
-
             await _consultaRepository.DeleteAsync(consulta.Id);
 
-            string mensagem = $"A consulta marcada para {consulta.DataHora} foi cancelada. Motivo: {request.Motivo}";
+            var notificacao = new CreateNotificacaoRequest
+            {
+                UsuarioId = consulta.MedicoId,
+                Mensagem = $"A consulta marcada para {consulta.DataHora} foi cancelada. Motivo: {request.Motivo}"
+            };
 
-            await _notificacaoService.EnviarNotificacaoAsync(consulta.MedicoId, mensagem);
-            await _notificacaoService.EnviarNotificacaoAsync(consulta.PacienteId, mensagem);
+            await _notificacaoService.EnviarNotificacaoAsync(consulta.MedicoId, notificacao.Mensagem);
+            await _notificacaoService.EnviarNotificacaoAsync(consulta.PacienteId, notificacao.Mensagem);
             //enviar e-mail tmb
 
             //await _sendGrid.SendAppointmentNotificationAsync(
@@ -126,7 +136,7 @@ namespace Hackaton.Infra.Services
 
             if (!consultas.Any())
             {
-                return null; 
+                return null;
             }
 
             var response = new PacienteHistoricoResponse
@@ -150,7 +160,7 @@ namespace Hackaton.Infra.Services
 
             if (!consultas.Any())
             {
-                return null; 
+                return null;
             }
 
             var response = new MedicoHistoricoResponse
@@ -171,7 +181,13 @@ namespace Hackaton.Infra.Services
         public async Task<ConsultaResponse> AgendarConsultaAsync(CreateConsultaRequest request)
         {
             var agenda = await _agendaRepository.GetByIdAsync(request.AgendaId);
-            if (agenda == null || !agenda.Disponivel)
+            var paciente = await _pacienteRepository.FindByIdAsync(request.PacienteId);
+            var medico = await _medicoRepository.GetByIdAsync(agenda.MedicoId);
+            
+            if(medico is null || paciente is null)
+                throw new Exception("Ids nao encontrados");
+
+            if (agenda is not { Disponivel: true })
             {
                 throw new Exception("O horário selecionado não está disponível.");
             }
@@ -192,6 +208,14 @@ namespace Hackaton.Infra.Services
 
             await _notificacaoService.EnviarNotificacaoAsync(consulta.MedicoId,
                 $"Nova consulta pendente para {consulta.DataHora}. Acesse para aceitar ou recusar.");
+            agenda.PacienteId = request.PacienteId;
+            agenda.Disponivel = false;
+
+            await _consultaRepository.AddAsync(consulta);
+            await _agendaRepository.UpdateAsync(agenda);
+
+            await _servicePublisherRabbit.PublishMessageAsync(new SendEmailCommand(medico.Email, medico.Nome,
+                paciente.Nome, DateTime.Now.ToString("d"), DateTime.Now.ToString("d")));
 
             return new ConsultaResponse
             {

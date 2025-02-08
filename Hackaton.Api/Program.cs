@@ -23,6 +23,9 @@ var postGreeDbSettings = builder.Configuration
 builder.Services.AddDbContext<FiapDbContext>(options =>
     options.UseNpgsql(postGreeDbSettings.ConnectionString));
 
+builder.Services.Configure<RabbitMQSettings>(
+    builder.Configuration.GetSection(nameof(RabbitMQSettings)));
+
 builder.Services.AddSingleton<NpgsqlConnection>(sp => new NpgsqlConnection(postGreeDbSettings.ConnectionString));
 builder.Services.AddScoped<FiapDbContext>();
 

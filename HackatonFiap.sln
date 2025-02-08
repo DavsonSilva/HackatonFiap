@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hackaton.Infra", "Hackaton.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hackaton.Infra.Ioc", "Hackaton.Infra.Ioc\Hackaton.Infra.Ioc.csproj", "{49D640E9-E172-4717-A4B2-95E4807AECA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hackaton.ConsumerRabbit", "Hackaton.ConsumerRabbit\Hackaton.ConsumerRabbit.csproj", "{FB46B3C5-48A8-4966-BEB2-510F6A1DF506}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{49D640E9-E172-4717-A4B2-95E4807AECA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49D640E9-E172-4717-A4B2-95E4807AECA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49D640E9-E172-4717-A4B2-95E4807AECA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB46B3C5-48A8-4966-BEB2-510F6A1DF506}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB46B3C5-48A8-4966-BEB2-510F6A1DF506}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB46B3C5-48A8-4966-BEB2-510F6A1DF506}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB46B3C5-48A8-4966-BEB2-510F6A1DF506}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

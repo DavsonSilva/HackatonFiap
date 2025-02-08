@@ -37,6 +37,8 @@ namespace Hackaton.Infra.Ioc
             services.AddScoped<IPacienteService, PacienteService>();
             services.AddScoped<ISendGridService, SendGridService>();
             services.AddScoped<IPasswordHasherService, PasswordHasherService>();
+            services.AddScoped<ServicePublisherRabbit>();
+            
         }
 
         private static void ConfigureRepositories(IServiceCollection services)
