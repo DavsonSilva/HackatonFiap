@@ -37,4 +37,10 @@
     <ProjectReference Include="..\Hackaton.Infra\Hackaton.Infra.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\.dockerignore">
+      <Link>.dockerignore</Link>
+    </Content>
+  </ItemGroup>
+
 </Project>
