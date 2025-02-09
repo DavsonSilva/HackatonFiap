@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Hackaton.Domain.Commands;
 using Hackaton.Domain.Entities.ConsultaEntity;
+using Hackaton.Domain.Entities.MedicoEntity;
 using Hackaton.Domain.Entities.PacienteEntity;
 using Hackaton.Domain.Enum;
 using Hackaton.Domain.Repositories;
@@ -11,6 +12,7 @@ using Hackaton.Domain.Responses;
 using Hackaton.Domain.Services;
 using Hackaton.Infra.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Hackaton.Infra.Services
 {
@@ -24,10 +26,11 @@ namespace Hackaton.Infra.Services
         private readonly ServicePublisherRabbit _servicePublisherRabbit;
         private readonly IMedicoRepository _medicoRepository;
         private readonly IPacienteRepository _pacienteRepository;
+        private readonly ISendGridService _sendGridService;
 
         public ConsultaService(IConsultaRepository consultaRepository, IAgendaRepository agendaRepository,
             INotificacaoService notificacaoService, IMapper mapper, IUsuarioRepository usuarioRepository,
-            ServicePublisherRabbit servicePublisherRabbit, IMedicoRepository medicoRepository, IPacienteRepository pacienteRepository)
+            ServicePublisherRabbit servicePublisherRabbit, IMedicoRepository medicoRepository, IPacienteRepository pacienteRepository, ISendGridService sendGridService)
         {
             _consultaRepository = consultaRepository;
             _agendaRepository = agendaRepository;
@@ -37,6 +40,7 @@ namespace Hackaton.Infra.Services
             _servicePublisherRabbit = servicePublisherRabbit;
             _medicoRepository = medicoRepository;
             _pacienteRepository = pacienteRepository;
+            _sendGridService = sendGridService;
         }
 
         public async Task<ConsultaListaResponse> GetAllAsync(BaseConsultaPaginada request)
@@ -121,13 +125,13 @@ namespace Hackaton.Infra.Services
 
             await _notificacaoService.EnviarNotificacaoAsync(consulta.MedicoId, notificacao.Mensagem);
             await _notificacaoService.EnviarNotificacaoAsync(consulta.PacienteId, notificacao.Mensagem);
-            //enviar e-mail tmb
 
-            //await _sendGrid.SendAppointmentNotificationAsync(
-            //    consulta.Paciente.Email,
-            //    request.Aceitar ? "Consulta Confirmada" : "Consulta Recusada",
-            //    mensagem
-            //);
+            var paciente = await _pacienteRepository.FindByIdAsync(consulta.PacienteId);
+            var medico = await _medicoRepository.GetByIdAsync(agenda.MedicoId);
+
+            await _servicePublisherRabbit.PublishMessageAsync(new SendEmailCancelCommand(medico.Email, medico.Nome,
+                paciente.Nome, DateTime.Now.ToString("d"), notificacao.Mensagem));
+
         }
 
         public async Task<PacienteHistoricoResponse> GetHistoricoPacienteAsync(int pacienteId)
@@ -211,10 +215,7 @@ namespace Hackaton.Infra.Services
             agenda.PacienteId = request.PacienteId;
             agenda.Disponivel = false;
 
-            await _consultaRepository.AddAsync(consulta);
-            await _agendaRepository.UpdateAsync(agenda);
-
-            await _servicePublisherRabbit.PublishMessageAsync(new SendEmailCommand(medico.Email, medico.Nome,
+            await _servicePublisherRabbit.PublishMessageAsync(new SendEmailAproveCommand(medico.Email, medico.Nome,
                 paciente.Nome, DateTime.Now.ToString("d"), DateTime.Now.ToString("d")));
 
             return new ConsultaResponse
@@ -255,18 +256,19 @@ namespace Hackaton.Infra.Services
 
                 await _agendaRepository.UpdateAsync(agenda);
             }
-
+            
             string mensagem = request.Aceitar
                 ? $"Sua consulta com o Dr. {consulta.Medico.Nome} foi confirmada para {consulta.DataHora}."
                 : $"Sua consulta com o Dr. {consulta.Medico.Nome} foi recusada.";
 
+            var paciente = await _pacienteRepository.FindByIdAsync(consulta.PacienteId);
+            var medico = await _medicoRepository.GetByIdAsync(agenda.MedicoId);
+
+            await _servicePublisherRabbit.PublishMessageAsync(new SendEmailCommand(medico.Email, medico.Nome,
+                paciente.Nome, DateTime.Now.ToString("d"), DateTime.Now.ToString("d")));
+
             await _notificacaoService.EnviarNotificacaoAsync(consulta.PacienteId, mensagem);
-            // eviar e-mail
-            //await _sendGrid.SendAppointmentNotificationAsync(
-            //    consulta.Paciente.Email,
-            //    request.Aceitar ? "Consulta Confirmada" : "Consulta Recusada",
-            //    mensagem
-            //);
+           
         }
 
         public async Task<IEnumerable<ConsultaResponse>> GetPendentesPorMedicoAsync(int medicoId)

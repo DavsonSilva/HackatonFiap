@@ -15,8 +15,7 @@ public class SendEmailHandler : IRequestHandler<SendEmailCommand>
     
     public async Task Handle(SendEmailCommand request, CancellationToken cancellationToken)
     {
-        await _sendGridService.SendAppointmentNotificationAsync(request.MedicoEmail, request.NomeMedico, request.NomePaciente,
+        await _sendGridService.EnviarEmailConsulta(request.MedicoEmail, request.NomeMedico, request.NomePaciente,
             request.Data, request.Horario);
     }
-    
 }

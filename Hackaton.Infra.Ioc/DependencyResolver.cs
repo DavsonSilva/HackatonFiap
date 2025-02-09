@@ -6,6 +6,7 @@ using Hackaton.Infra.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SendGrid;
 
 namespace Hackaton.Infra.Ioc
 {
@@ -15,6 +16,11 @@ namespace Hackaton.Infra.Ioc
         {
             return services
                 .AddServices(configuration);
+        }
+
+        public static void ConfigureConsumer(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddSingleton<ISendGridService, SendGridService>();
         }
 
         private static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
